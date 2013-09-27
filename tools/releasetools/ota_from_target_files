@@ -370,8 +370,8 @@ fi
         'recovery_device': recovery_device,
         'bonus_args': bonus_args,
         }
-  common.ZipWriteStr(output_zip, "recovery/etc/install-recovery.sh", sh)
-  return Item.Get("system/etc/install-recovery.sh", dir=False)
+  #common.ZipWriteStr(output_zip, "recovery/etc/install-recovery.sh", sh)
+  #return Item.Get("system/etc/install-recovery.sh", dir=False)
 
 
 def WriteFullOTAPackage(input_zip, output_zip):
@@ -426,8 +426,8 @@ def WriteFullOTAPackage(input_zip, output_zip):
   symlinks = CopySystemFiles(input_zip, output_zip)
   script.MakeSymlinks(symlinks)
 
-  boot_img = common.GetBootableImage("boot.img", "boot.img",
-                                     OPTIONS.input_tmp, "BOOT")
+  #boot_img = common.GetBootableImage("boot.img", "boot.img",
+  #                                   OPTIONS.input_tmp, "BOOT")
   #recovery_img = common.GetBootableImage("recovery.img", "recovery.img",
   #                                       OPTIONS.input_tmp, "RECOVERY")
   #MakeRecoveryPatch(OPTIONS.input_tmp, output_zip, recovery_img, boot_img)
@@ -435,8 +435,8 @@ def WriteFullOTAPackage(input_zip, output_zip):
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
 
-  common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
-  common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
+  #common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
+  #common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 0)
 
   if OPTIONS.backuptool:
@@ -444,7 +444,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
     script.RunBackup("restore")
 
   script.ShowProgress(0.2, 10)
-  script.WriteRawImage("/boot", "boot.img")
+  #script.WriteRawImage("/boot", "boot.img")
 
   script.ShowProgress(0.1, 0)
   device_specific.FullOTA_InstallEnd()
@@ -563,20 +563,20 @@ def WriteIncrementalOTAPackage(target_zip, source_zip, output_zip):
   script.Mount("/system")
   script.AssertSomeFingerprint(source_fp, target_fp)
 
-  source_boot = common.GetBootableImage(
-      "/tmp/boot.img", "boot.img", OPTIONS.source_tmp, "BOOT",
-      OPTIONS.source_info_dict)
-  target_boot = common.GetBootableImage(
-      "/tmp/boot.img", "boot.img", OPTIONS.target_tmp, "BOOT")
-  updating_boot = (source_boot.data != target_boot.data)
+  #source_boot = common.GetBootableImage(
+  #    "/tmp/boot.img", "boot.img", OPTIONS.source_tmp, "BOOT",
+  #    OPTIONS.source_info_dict)
+  #target_boot = common.GetBootableImage(
+  #    "/tmp/boot.img", "boot.img", OPTIONS.target_tmp, "BOOT")
+  #updating_boot = (source_boot.data != target_boot.data)
 
   #source_recovery = common.GetBootableImage(
   #    "/tmp/recovery.img", "recovery.img", OPTIONS.source_tmp, "RECOVERY",
   #    OPTIONS.source_info_dict)
   #target_recovery = common.GetBootableImage(
   #    "/tmp/recovery.img", "recovery.img", OPTIONS.target_tmp, "RECOVERY")
-  updating_recovery = (source_recovery.data != target_recovery.data)
-
+  #updating_recovery = (source_recovery.data != target_recovery.data)
+  updating_recovery = false
   # Here's how we divide up the progress bar:
   #  0.1 for verifying the start state (PatchCheck calls)
   #  0.8 for applying patches (ApplyPatch calls)
