@@ -184,16 +184,16 @@ ifneq ($(strip $(TARGET_BUILD_APPS)),)
 all_product_configs := $(call get-product-makefiles,\
     $(SRC_TARGET_DIR)/product/AndroidProducts.mk)
 else
-  ifneq ($(CM_BUILD),)
-    all_product_configs := $(shell ls device/*/$(CM_BUILD)/cm.mk)
+  ifneq ($(CARBON_BUILD),)
+    all_product_configs := $(shell ls device/*/$(CARBON_BUILD)/carbon.mk)
   else
     # Read in all of the product definitions specified by the AndroidProducts.mk
     # files in the tree.
     all_product_configs := $(get-all-product-makefiles)
-  endif # CM_BUILD
+  endif # CARBON_BUILD
 endif
 
-ifeq ($(CM_BUILD),)
+ifeq ($(CARBON_BUILD),)
 # Find the product config makefile for the current product.
 # all_product_configs consists items like:
 # <product_name>:<path_to_the_product_makefile>
@@ -338,12 +338,6 @@ endif
 # The optional :<owner> is used to indicate the owner of a vendor file.
 PRODUCT_COPY_FILES := \
     $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_COPY_FILES))
-_boot_animation := $(strip $(lastword $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_BOOTANIMATION)))
-ifneq ($(_boot_animation),)
-PRODUCT_COPY_FILES += \
-    $(_boot_animation):system/media/bootanimation.zip
-endif
-_boot_animation :=
 
 # A list of property assignments, like "key = value", with zero or more
 # whitespace characters on either side of the '='.
