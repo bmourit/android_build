@@ -441,8 +441,8 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("                                        ");
   script.Print("                                        ");
 
-  #if "selinux_fc" in OPTIONS.info_dict:
-  #  WritePolicyConfig(OPTIONS.info_dict["selinux_fc"], output_zip)
+  if "selinux_fc" in OPTIONS.info_dict:
+    WritePolicyConfig(OPTIONS.info_dict["selinux_fc"], output_zip)
 
   script.Print("Formating System...")
   script.FormatPartition("/system")
