@@ -16,9 +16,12 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - jgrep:   Greps on all local Java files.
 - resgrep: Greps on all local res/*.xml files.
 - godir:   Go to the directory containing a file.
+- crremote: Add git remote for Carbon Gerrit Review.
+- crrebase: Rebase a Gerrit change and push it again.
 - aospremote: Add git remote for matching AOSP repository.
 - mka:      Builds using SCHED_BATCH on all processors.
 - mkap:     Builds the module(s) using mka and pushes them to the device.
+- cmka:     Cleans and builds using mka.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH.
 - repopick: Utility to fetch changes from Gerrit.
 - installboot: Installs a boot.img to the connected device.
@@ -70,7 +73,7 @@ function check_product()
 
     if (echo -n $1 | grep -q -e "^carbon_") ; then
        CARBON_BUILD=$(echo -n $1 | sed -e 's/^carbon_//g')
-       export BUILD_NUMBER=$((date +%s%N ; echo $CARBON_BUILD; hostname) | sha1sum | cut -c1-10)
+       export BUILD_NUMBER=$((date +%s%N ; echo $CARBON_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
     else
        CARBON_BUILD=
     fi
@@ -567,16 +570,16 @@ function lunch()
     if [ $? -ne 0 ]
     then
         # if we can't find a product, try to grab it off the Carbon github
-    #    T=$(gettop)
-    #    pushd $T > /dev/null
-    #    build/tools/roomservice.py $product
-    #    popd > /dev/null
-    #    check_product $product
-    #else
-    #    build/tools/roomservice.py $product true
-    #fi
-    #if [ $? -ne 0 ]
-    #then
+        T=$(gettop)
+        pushd $T > /dev/null
+        build/tools/roomservice.py $product
+        popd > /dev/null
+        check_product $product
+    else
+        build/tools/roomservice.py $product true
+    fi
+    if [ $? -ne 0 ]
+    then
         echo
         echo "** Don't have a product spec for: '$product'"
         echo "** Do you have the right repo manifest?"
@@ -666,7 +669,7 @@ function tapas()
 function eat()
 {
     if [ "$OUT" ] ; then
-        MODVERSION=$(get_build_var CCARBON_VERSION)
+        MODVERSION=$(get_build_var CARBON_VERSION)
         ZIPFILE=carbon-$MODVERSION.zip
         ZIPPATH=$OUT/$ZIPFILE
         if [ ! -f $ZIPPATH ] ; then
@@ -688,13 +691,20 @@ function eat()
         adb root
         sleep 1
         adb wait-for-device
+        # CWM command
         cat << EOF > /tmp/command
 --sideload
 EOF
-        if adb push /tmp/command /cache/recovery/ ; then
+        # TWRP command
+        cat << EOF > /tmp/openrecoveryscript
+sideload
+EOF
+        if adb push /tmp/command /cache/recovery/ && adb push /tmp/openrecoveryscript /cache/recovery/; then
             echo "Rebooting into recovery for sideload installation"
             adb reboot recovery
+            adb kill-server
             adb wait-for-sideload
+            echo "Device back online, trying to sideload"
             adb sideload $ZIPPATH
         fi
         rm /tmp/command
@@ -1390,6 +1400,75 @@ function godir () {
     \cd $T/$pathname
 }
 
+function crremote()
+{
+    git remote rm crremote 2> /dev/null
+    if [ ! -d .git ]
+    then
+        echo .git directory not found. Please run this from the root directory of the Android repository you wish to set up.
+    fi
+    GERRIT_REMOTE=$(cat .git/config  | grep git://github.com | awk '{ print $NF }' | sed s#git://github.com/##g)
+    if [ -z "$GERRIT_REMOTE" ]
+    then
+        GERRIT_REMOTE=$(cat .git/config  | grep http://github.com | awk '{ print $NF }' | sed s#http://github.com/##g)
+        if [ -z "$GERRIT_REMOTE" ]
+        then
+          echo Unable to set up the git remote, are you in the root of the repo?
+          return 0
+        fi
+    fi
+    CRUSER=`git config --get review.review.carbon-rom.com.username`
+    if [ -z "$CRUSER" ]
+    then
+        git remote add crremote ssh://review.carbon-rom.com:29419/$GERRIT_REMOTE
+    else
+        git remote add crremote ssh://$CRUSER@review.carbon-rom.com:29419/$GERRIT_REMOTE
+    fi
+    echo You can now push to "crremote".
+}
+export -f crremote
+
+function crrebase() {
+    local repo=$1
+    local refs=$2
+    local pwd="$(pwd)"
+    local dir="$(gettop)/$repo"
+
+    if [ -z $repo ] || [ -z $refs ]; then
+        echo "CarbonRom Gerrit Rebase Usage: "
+        echo "      crrebase <path to project> <patch IDs on Gerrit>"
+        echo "      The patch IDs appear on the Gerrit commands that are offered."
+        echo "      They consist on a series of numbers and slashes, after the text"
+        echo "      refs/changes. For example, the ID in the following command is 26/8126/2"
+        echo ""
+        echo "      git[...]ges_apps_Camera refs/changes/26/8126/2 && git cherry-pick FETCH_HEAD"
+        echo ""
+        return
+    fi
+
+    if [ ! -d $dir ]; then
+        echo "Directory $dir doesn't exist in tree."
+        return
+    fi
+    cd $dir
+    repo=$(cat .git/config  | grep git://github.com | awk '{ print $NF }' | sed s#git://github.com/##g)
+    echo "Starting branch..."
+    repo start tmprebase .
+    echo "Bringing it up to date..."
+    repo sync .
+    echo "Fetching change..."
+    git fetch "http://review.carbon-rom.com/p/$repo" "refs/changes/$refs" && git cherry-pick FETCH_HEAD
+    if [ "$?" != "0" ]; then
+        echo "Error cherry-picking. Not uploading!"
+        return
+    fi
+    echo "Uploading..."
+    repo upload .
+    echo "Cleaning up..."
+    repo abandon tmprebase .
+    cd $pwd
+}
+
 function aospremote()
 {
     git remote rm aosp 2> /dev/null
@@ -1509,6 +1588,26 @@ function mka() {
     esac
 }
 
+function cmka() {
+    if [ ! -z "$1" ]; then
+        for i in "$@"; do
+            case $i in
+                carbon|otapackage|systemimage)
+                    mka installclean
+                    mka $i
+                    ;;
+                *)
+                    mka clean-$i
+                    mka $i
+                    ;;
+            esac
+        done
+    else
+        mka clean
+        mka
+    fi
+}
+
 function reposync() {
     case `uname -s` in
         Darwin)
@@ -1603,6 +1702,7 @@ function dopush()
 alias mmp='dopush mm'
 alias mmmp='dopush mmm'
 alias mkap='dopush mka'
+alias cmkap='dopush cmka'
 
 function repopick() {
     T=$(gettop)
