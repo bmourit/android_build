@@ -38,7 +38,7 @@ build_mac_version := $(shell sw_vers -productVersion)
 
 ifneq ($(strip $(BUILD_MAC_SDK_EXPERIMENTAL)),)
 # SDK 10.7 and higher is not fully compatible with Android.
-mac_sdk_versions_supported :=  10.8 10.7 10.6 10.9
+mac_sdk_versions_supported :=  10.6 10.7 10.8 10.9
 ifneq ($(strip $(MAC_SDK_VERSION)),)
 mac_sdk_version := $(MAC_SDK_VERSION)
 ifeq ($(filter $(mac_sdk_version),$(mac_sdk_versions_supported)),)
@@ -56,13 +56,13 @@ endif
 endif
 endif
 
-mac_sdk_path := /Applications/Xcode.app/Contents/Developer
+mac_sdk_path := $(shell xcode-select -print-path)
 # try /Applications/Xcode*.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.?.sdk
 #  or /Volume/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.?.sdk
-mac_sdk_root := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
+mac_sdk_root := $(mac_sdk_path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$(mac_sdk_version).sdk
 ifeq ($(wildcard $(mac_sdk_root)),)
 # try legacy /Developer/SDKs/MacOSX10.?.sdk
-mac_sdk_root := /Developer/SDKs/MacOSX10.8.sdk
+mac_sdk_root := /Developer/SDKs/MacOSX$(mac_sdk_version).sdk
 endif
 ifeq ($(wildcard $(mac_sdk_root)),)
 $(warning *****************************************************)
@@ -78,11 +78,11 @@ else
 endif
 
 HOST_TOOLCHAIN_ROOT := prebuilts/gcc/darwin-x86/host/i686-apple-darwin-4.2.1
-HOST_TOOLCHAIN_PREFIX := prebuilts/gcc/darwin-x86/host/i686-apple-darwin-4.2.1/bin/i686-apple-darwin11
+HOST_TOOLCHAIN_PREFIX := $(HOST_TOOLCHAIN_ROOT)/bin/i686-apple-darwin$(gcc_darwin_version)
 # Don't do anything if the toolchain is not there
 ifneq (,$(strip $(wildcard $(HOST_TOOLCHAIN_PREFIX)-gcc)))
-HOST_CC  := prebuilts/gcc/darwin-x86/host/i686-apple-darwin-4.2.1/bin/i686-apple-darwin11-gcc
-HOST_CXX := prebuilts/gcc/darwin-x86/host/i686-apple-darwin-4.2.1/bin/i686-apple-darwin11-g++
+HOST_CC  := $(HOST_TOOLCHAIN_PREFIX)-gcc
+HOST_CXX := $(HOST_TOOLCHAIN_PREFIX)-g++
 
 ifeq ($(mac_sdk_version),10.9)
 HOST_GLOBAL_CFLAGS += -I$(mac_sdk_root)/usr/include/c++/4.2.1 -arch i386 -Wno-nested-anon-types -Wno-unused-parameter
@@ -90,7 +90,7 @@ HOST_GLOBAL_LDFLAGS += -Wl,-arch,i386,-lstdc++
 else
 ifeq ($(mac_sdk_version),10.8)
 # Mac SDK 10.8 no longer has stdarg.h, etc
-host_toolchain_header := $(HOST_TOOLCHAIN_ROOT)/lib/gcc/i686-apple-darwin11/4.2.1/include
+host_toolchain_header := $(HOST_TOOLCHAIN_ROOT)/lib/gcc/i686-apple-darwin$(gcc_darwin_version)/4.2.1/include
 HOST_GLOBAL_CFLAGS += -isystem $(host_toolchain_header)
 endif
 endif
@@ -102,8 +102,8 @@ HOST_AR := $(AR)
 HOST_STRIP := $(STRIP)
 HOST_STRIP_COMMAND = $(HOST_STRIP) --strip-debug $< -o $@
 
-HOST_GLOBAL_CFLAGS += -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk -mmacosx-version-min=$(mac_sdk_version) -DMACOSX_DEPLOYMENT_TARGET=$(mac_sdk_version)
-HOST_GLOBAL_LDFLAGS += -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk -Wl,-syslibroot,/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk -mmacosx-version-min=$(mac_sdk_version)
+HOST_GLOBAL_CFLAGS += -isysroot $(mac_sdk_root) -mmacosx-version-min=$(mac_sdk_version) -DMACOSX_DEPLOYMENT_TARGET=$(mac_sdk_version)
+HOST_GLOBAL_LDFLAGS += -isysroot $(mac_sdk_root) -Wl,-syslibroot,$(mac_sdk_root) -mmacosx-version-min=$(mac_sdk_version)
 
 HOST_GLOBAL_CFLAGS += -fPIC -funwind-tables
 HOST_NO_UNDEFINED_LDFLAGS := -Wl,-undefined,error

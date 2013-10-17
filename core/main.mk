@@ -480,18 +480,8 @@ else # ONE_SHOT_MAKEFILE
 
 # Can't use first-makefiles-under here because
 # --mindepth=2 makes the prunes not work.
-
-
-additional_prune_dir :=
-
-# note this is a temporary hack to wifi modules build system: hack with gs702a &gs702c
-ifeq (full_gs702c,$(strip $(TARGET_PRODUCT)))
-additional_prune_dir += --prune=device/actions/gs702a/hardware/wifi --prune=device/actions/gs702a/hardware/mt6622 --prune=device/actions/gs702a/hardware/rtl8723
-else
-endif # PRODUCT_DEVICE
-
 subdir_makefiles := \
-	$(shell build/tools/findleaves.py --prune=out --prune=.repo $(additional_prune_dir) --prune=.git $(subdirs) Android.mk)
+	$(shell build/tools/findleaves.py --prune=out --prune=.repo --prune=.git $(subdirs) Android.mk)
 
 include $(subdir_makefiles)
 

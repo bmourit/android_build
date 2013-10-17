@@ -455,6 +455,13 @@ function add_lunch_combo()
     LUNCH_MENU_CHOICES=(${LUNCH_MENU_CHOICES[@]} $new_combo)
 }
 
+# add the default one here
+add_lunch_combo full-eng
+add_lunch_combo aosp_arm-eng
+add_lunch_combo aosp_x86-eng
+add_lunch_combo aosp_mips-eng
+add_lunch_combo vbox_x86-eng
+
 function print_lunch_menu()
 {
     local uname=$(uname)
@@ -479,7 +486,7 @@ function print_lunch_menu()
     done | column
 
     if [ "z${CARBON_DEVICES_ONLY}" != "z" ]; then
-       echo "... and don't forget the bacon!"
+       echo "... and don't forget the carbon!"
     fi
 
     echo
@@ -714,7 +721,7 @@ EOF
     fi
     return $?
     else
-        echo "The connected device does not appear to be $CARBON_BUILD, run away!"
+        echo "The connected device does not appear to be $CARBON_BUILD, swim away!"
     fi
 }
 
