@@ -21,7 +21,6 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - aospremote: Add git remote for matching AOSP repository.
 - mka:      Builds using SCHED_BATCH on all processors.
 - mkap:     Builds the module(s) using mka and pushes them to the device.
-- cmka:     Cleans and builds using mka.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH.
 - repopick: Utility to fetch changes from Gerrit.
 - installboot: Installs a boot.img to the connected device.
@@ -455,13 +454,6 @@ function add_lunch_combo()
     LUNCH_MENU_CHOICES=(${LUNCH_MENU_CHOICES[@]} $new_combo)
 }
 
-# add the default one here
-add_lunch_combo full-eng
-add_lunch_combo aosp_arm-eng
-add_lunch_combo aosp_x86-eng
-add_lunch_combo aosp_mips-eng
-add_lunch_combo vbox_x86-eng
-
 function print_lunch_menu()
 {
     local uname=$(uname)
@@ -486,7 +478,7 @@ function print_lunch_menu()
     done | column
 
     if [ "z${CARBON_DEVICES_ONLY}" != "z" ]; then
-       echo "... and don't forget the carbon!"
+       echo "... and don't forget the bacon!"
     fi
 
     echo
@@ -577,16 +569,16 @@ function lunch()
     if [ $? -ne 0 ]
     then
         # if we can't find a product, try to grab it off the Carbon github
-        T=$(gettop)
-        pushd $T > /dev/null
-        build/tools/roomservice.py $product
-        popd > /dev/null
-        check_product $product
-    else
-        build/tools/roomservice.py $product true
-    fi
-    if [ $? -ne 0 ]
-    then
+    #    T=$(gettop)
+    #    pushd $T > /dev/null
+    #    build/tools/roomservice.py $product
+    #    popd > /dev/null
+    #    check_product $product
+    #else
+    #    build/tools/roomservice.py $product true
+    #fi
+    #if [ $? -ne 0 ]
+    #then
         echo
         echo "** Don't have a product spec for: '$product'"
         echo "** Do you have the right repo manifest?"
@@ -676,7 +668,7 @@ function tapas()
 function eat()
 {
     if [ "$OUT" ] ; then
-        MODVERSION=$(get_build_var CARBON_VERSION)
+        MODVERSION=$(get_build_var CCARBON_VERSION)
         ZIPFILE=carbon-$MODVERSION.zip
         ZIPPATH=$OUT/$ZIPFILE
         if [ ! -f $ZIPPATH ] ; then
@@ -721,7 +713,7 @@ EOF
     fi
     return $?
     else
-        echo "The connected device does not appear to be $CARBON_BUILD, swim away!"
+        echo "The connected device does not appear to be $CARBON_BUILD, run away!"
     fi
 }
 
@@ -1595,26 +1587,6 @@ function mka() {
     esac
 }
 
-function cmka() {
-    if [ ! -z "$1" ]; then
-        for i in "$@"; do
-            case $i in
-                carbon|otapackage|systemimage)
-                    mka installclean
-                    mka $i
-                    ;;
-                *)
-                    mka clean-$i
-                    mka $i
-                    ;;
-            esac
-        done
-    else
-        mka clean
-        mka
-    fi
-}
-
 function reposync() {
     case `uname -s` in
         Darwin)
@@ -1709,7 +1681,6 @@ function dopush()
 alias mmp='dopush mm'
 alias mmmp='dopush mmm'
 alias mkap='dopush mka'
-alias cmkap='dopush cmka'
 
 function repopick() {
     T=$(gettop)

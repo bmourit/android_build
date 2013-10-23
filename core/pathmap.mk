@@ -55,7 +55,6 @@ pathmap_INCL := \
     wilhelm-ut:frameworks/wilhelm/src/ut \
     speex:external/speex/include \
     alsp:frameworks/av/include/alsp/inc
-
 #
 # Returns the path to the requested module's include directory,
 # relative to the root of the source tree.  Does not handle external
