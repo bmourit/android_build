@@ -29,7 +29,6 @@ PRODUCT_PACKAGES += \
     KeyChain \
     PicoTts \
     SharedStorageBackup \
-    TelephonyProvider \
     UserDictionaryProvider \
     VpnDialogs \
     atrace \
@@ -66,9 +65,7 @@ PRODUCT_PACKAGES += \
     libvariablespeed \
     libwebrtc_audio_preprocessing \
     mdnsd \
-    mms-common \
     requestsync \
-    telephony-common \
     voip-common
 
 # host-only dependencies

@@ -23,7 +23,7 @@ PRODUCT_PACKAGES := \
     libfwdlockengine \
     WAPPushManager
 
-include $(SRC_TARGET_DIR)/product/emulator.mk
+#include $(SRC_TARGET_DIR)/product/emulator.mk
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
@@ -42,4 +42,4 @@ $(call inherit-product-if-exists, external/svox/pico/lang/all_pico_languages.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/locales_full.mk)
 
 # Get everything else from the parent package
-$(call inherit-product, $(SRC_TARGET_DIR)/product/generic_no_telephony.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/generic_tablet_no_telephony.mk)

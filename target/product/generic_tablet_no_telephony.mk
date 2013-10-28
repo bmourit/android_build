@@ -28,7 +28,6 @@ PRODUCT_PACKAGES := \
     DrmProvider \
     Email \
     Exchange2 \
-    Phone \
     FusedLocation \
     Gallery2 \
     InputDevices \
@@ -82,7 +81,7 @@ $(call inherit-product-if-exists, external/noto-fonts/fonts.mk)
 $(call inherit-product-if-exists, external/naver-fonts/fonts.mk)
 $(call inherit-product-if-exists, frameworks/base/data/keyboards/keyboards.mk)
 $(call inherit-product-if-exists, frameworks/webview/chromium/chromium.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/core.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/tablet_core.mk)
 
 # Overrides
 PRODUCT_BRAND := generic
